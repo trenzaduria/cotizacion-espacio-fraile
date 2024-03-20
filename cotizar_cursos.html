@@ -1,0 +1,176 @@
+<style>
+	.formRow label {
+		font: inherit;
+		font-weight: bold;
+	}
+
+	.formRow {
+		display: grid;
+		grid-template-columns: minmax(50%, auto) minmax(50%, 1fr);
+		font-size: .8em;
+		line-height: 1.2;
+		align-items: center;
+		border-width: 1px 0 1px 0;
+		border-style: solid;
+		margin-bottom: -1px;
+		padding: .5em 0
+	}
+
+	.formRow input,
+	.formRow select {
+		font-size: inherit;
+		border: 2px solid #999999 !important;
+		border-radius: 0 !important;
+	}
+
+	.formRow :disabled {
+		border: none !important;
+		background-color: transparent !important;
+		font-size: inherit !important;
+	}
+
+	#recibiras {
+		font-weight: bold;
+	}
+</style>
+<form action="#" method="#">
+	<div class="formRow"><label for="jornadas">Cantidad de jornadas</label><select id="jornadas" name="jornadas"
+			required="">
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="4">4</option>
+		</select></div>
+	<div class="formRow"><label for="alumnos">Cantidad de alumnos</label> <input id="alumnos" name="alumnos" required=""
+			type="number" value="5" /></div>
+	<div class="formRow"><label for="docTributario">Documento tributario</label><select id="docTributario"
+			name="docTributario" required="">
+			<option value="boleta">Boleta de honorarios</option>
+			<option value="factura">Factura Exenta</option>
+		</select></div>
+	<div class="formRow"><label title="Con IVA incluido" for="precioCurso">Precio del curso</label> <input
+			id="precioCurso" name="precioCurso" required="" type="number" value="25000" /></div>
+	<div class="formRow"><label for="cargoServicio">Cargo por servicio</label> <input id="cargoServicio"
+			disabled="disabled" name="cargoServicio" readonly="readonly" type="text" /></div>
+	<div class="formRow"><label for="totalFactura">Total de la boleta o factura</label> <input id="totalFactura"
+			disabled="disabled" name="totalFactura" readonly="readonly" type="text" /></div>
+	<div class="formRow"><label for="recibiras">Recibirás</label> <input id="recibiras" disabled="disabled"
+			name="recibiras" readonly="readonly" type="text" /></div>
+</form>
+<script>
+	// Precios netos
+	const JORNADA1 = 50000;
+	const JORNADA2 = 94000;
+	const JORNADA4 = 120000;
+	const COFFEE = 2100;
+
+	function id(campo) {
+		return document.getElementById(campo);
+	}
+
+
+
+
+	let jornadas = id("jornadas");
+	let alumnos = id("alumnos");
+
+	let precioCurso = id("precioCurso");
+
+	let gastosTotales = id("gastosTotales");
+
+	let ingresosCurso = id("ingresosCurso");
+
+	let cargoServicio = id("cargoServicio");
+
+	let totalFactura = id("totalFactura");
+	let recibiras = id("recibiras");
+
+	let docTributario = id("docTributario");
+
+
+
+
+
+	["DOMContentLoaded", "keydown", "change", "input"].forEach(evento => {
+		document.addEventListener(evento, calcular);
+	});
+
+	function clp(number) {
+		return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(
+			number,);
+	}
+
+
+
+	function calcular() {
+
+
+		ingresosCurso = Math.round(parseFloat(alumnos.value) * parseFloat(precioCurso.value));
+
+		// COMISIONES ESPACIO FRAILE
+
+		//Cargo por servicio
+		const cargo = .15;
+
+		if (jornadas.value == 1) {
+			if ((ingresosCurso * cargo) <= JORNADA1) {
+				cargoValor = Math.round(ingresosCurso * cargo);
+				cargoServicio.value = clp(cargoValor);
+			} else if ((ingresosCurso * cargo) >= JORNADA1) {
+				cargoValor = JORNADA1;
+				cargoServicio.value = clp(cargoValor);
+			}
+
+		} else if (jornadas.value == 2) {
+			if ((ingresosCurso * cargo) <= JORNADA2) {
+				cargoValor = Math.round(ingresosCurso * cargo);
+				cargoServicio.value = clp(cargoValor);
+			} else if ((ingresosCurso * cargo) >= JORNADA2) {
+				cargoValor = JORNADA2;
+				cargoServicio.value = clp(cargoValor);
+			}
+
+		} else if (jornadas.value == 4) {
+			if ((ingresosCurso * cargo) <= JORNADA4) {
+				cargoValor = Math.round(ingresosCurso * cargo);
+				cargoServicio.value = clp(cargoValor);
+			} else if ((ingresosCurso * cargo) >= JORNADA4) {
+				cargoValor = JORNADA4;
+				cargoServicio.value = clp(cargoValor);
+			}
+		}
+
+
+		// TOTAL BOLETA
+
+		if (docTributario.value == "boleta") {
+			totalFactura.value = clp(Math.round(ingresosCurso - cargoValor));
+		} else if (docTributario.value == "factura") {
+			totalFactura.value = clp(Math.round((ingresosCurso - cargoValor)));
+		}
+
+
+		//RECIBIRÁS 
+
+		const AÑO = new Date().getFullYear();
+
+		const retenciones =
+		{
+			2023: 13,
+			2024: 13.75,
+			2025: 14.5,
+			2026: 15.25,
+			2027: 16,
+			2028: 17
+		};
+
+		const retencionBoletas = (100 - retenciones[AÑO]) / 100;
+
+
+		if (docTributario.value == "boleta") {
+			recibiras.value = clp(Math.round((ingresosCurso - cargoValor) * retencionBoletas));
+		} else if (docTributario.value == "factura") {
+			recibiras.value = clp(Math.round((ingresosCurso - cargoValor)));
+		}
+	}
+
+</script>
